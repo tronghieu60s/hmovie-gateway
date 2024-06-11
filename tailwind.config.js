@@ -5,7 +5,8 @@ module.exports = {
   content: [
     "./public/**/*.html",
     "./src/app/**/*.{ts,tsx}",
-    "./src/components/**/*.{ts,tsx}",
+    "./src/main/**/*.{ts,tsx}",
+    "./src/pages/**/*.{ts,tsx}",
     flowbite.content(),
   ],
   theme: {
