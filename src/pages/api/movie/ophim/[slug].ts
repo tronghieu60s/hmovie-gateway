@@ -1,18 +1,16 @@
 import { ApiResponse } from "@/core/dto/api-result.dto";
 import type { NextApiRequest, NextApiResponse } from "next";
 
-const apiPath = "https://ophim1.com/phim";
-
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const {
-    query: { slug },
-  } = req;
+  const { slug } = req.query;
 
   try {
-    const movie = await fetch(`${apiPath}/${slug}`).then((res) => res.json());
+    const movie = await fetch(`https://ophim1.com/phim/${slug}`).then((res) =>
+      res.json()
+    );
 
     const data = {
       type: movie.movie.type,

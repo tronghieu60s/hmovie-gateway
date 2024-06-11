@@ -1,15 +1,11 @@
 import { ApiResponse } from "@/core/dto/api-result.dto";
 import type { NextApiRequest, NextApiResponse } from "next";
 
-const apiPath = "https://ophim1.com/danh-sach/phim-moi-cap-nhat";
-
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const {
-    query: { page = 1 },
-  } = req;
+  const { page = 1 } = req.query;
 
   const queryParams = new URLSearchParams();
   queryParams.append("page", `${page}`);
@@ -17,9 +13,9 @@ export default async function handler(
   const queryString = queryParams.toString();
 
   try {
-    const movies = await fetch(`${apiPath}?${queryString}`).then((res) =>
-      res.json()
-    );
+    const movies = await fetch(
+      `https://ophim1.com/danh-sach/phim-moi-cap-nhat?${queryString}`
+    ).then((res) => res.json());
 
     const items = movies.items.map((item: any) => ({
       name: item.name,
