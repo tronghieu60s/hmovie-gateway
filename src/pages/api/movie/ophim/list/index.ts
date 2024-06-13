@@ -1,16 +1,10 @@
 import { ApiResponse } from "@/core/dto/api-result.dto";
 import type { NextApiRequest, NextApiResponse } from "next";
-import NextCors from "nextjs-cors";
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  await NextCors(req, res, {
-    methods: ["GET"],
-    origin: ["http://localhost:8081", "https://localhost:8081"],
-  });
-
   if (req.method === "GET") {
     try {
       const { page = 1 } = req.query;
