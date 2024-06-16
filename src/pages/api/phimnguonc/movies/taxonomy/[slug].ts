@@ -20,8 +20,8 @@ export default async function handler(
 
   const queryString = queryParams.toString();
 
-  if(!taxonomy) {
-    taxonomy = 'dinh-dang';
+  if (!taxonomy) {
+    taxonomy = "dinh-dang";
   }
 
   if (!Object.keys(taxonomyMapping).includes(taxonomy)) {
@@ -61,6 +61,7 @@ export default async function handler(
         ?.split(",")
         .map((item: string) => item.trim())
         .filter((item: string) => item),
+      source: "phimnguonc",
     }));
 
     const pagination = {

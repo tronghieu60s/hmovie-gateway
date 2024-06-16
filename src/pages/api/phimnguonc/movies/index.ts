@@ -31,6 +31,7 @@ export default async function handler(
       language: item.language,
       casts: (item.casts || '').split(",").map((item: string) => item.trim()).filter((item: string) => item),
       directors: (item.director || '')?.split(",").map((item: string) => item.trim()).filter((item: string) => item),
+      source: "phimnguonc",
     }));
 
     const pagination = {
