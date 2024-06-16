@@ -31,7 +31,7 @@ export default async function handler(
       const pagination = {
         page: movies.pagination.currentPage,
         limit: movies.pagination.totalItemsPerPage,
-        totalPage: movies.pagination.totalPages,
+        totalPages: movies.pagination.totalPages,
         totalItems: movies.pagination.totalItems,
       };
 

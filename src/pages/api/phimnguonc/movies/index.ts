@@ -20,7 +20,7 @@ export default async function handler(
     const items = movies.items.map((item: any) => ({
       name: item.name,
       slug: item.slug,
-      originName: item.origin_name,
+      originName: item.original_name,
       thumbUrl: item.thumb_url,
       posterUrl: item.poster_url,
       content: item.description,
@@ -37,7 +37,7 @@ export default async function handler(
     const pagination = {
       page: movies.paginate.current_page,
       limit: movies.paginate.items_per_page,
-      totalPage: movies.paginate.total_page,
+      totalPages: movies.paginate.total_page,
       totalItems: movies.paginate.total_items,
     };
 
