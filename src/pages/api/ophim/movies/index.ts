@@ -1,38 +1,63 @@
 import { ApiResponse } from "@/core/dto/api-result.dto";
 import type { NextApiRequest, NextApiResponse } from "next";
 
+const apiUrl = "https://ophim1.com/danh-sach/phim-moi-cap-nhat";
+const pageSize = 24;
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   if (req.method === "GET") {
     try {
-      const { page = 1 } = req.query;
+      const { page: _page = 1, limit: _limit = 50 } = req.query;
 
-      const queryParams = new URLSearchParams();
-      queryParams.append("page", `${page}`);
+      const movies = [];
 
-      const queryString = queryParams.toString();
+      let page = Math.ceil(Number(_page) * Number(_limit) / pageSize);
+      let pathImage = "";
+      let totalItems = 0;
 
-      const movies = await fetch(
-        `https://ophim1.com/danh-sach/phim-moi-cap-nhat?${queryString}`
-      ).then((res) => res.json());
+      do {
+        const queryParams = new URLSearchParams();
+        queryParams.set("page", `${page}`);
 
-      const items = movies.items.map((item: any) => ({
+        const queryString = queryParams.toString();
+
+        page -= 1;
+        console.log(`${apiUrl}?${queryString}`);
+
+        const response = await fetch(`${apiUrl}?${queryString}`).then((res) =>
+          res.json()
+        );
+
+        movies.unshift(...response.items);
+        if (!pathImage) {
+          pathImage = response.pathImage;
+        }
+        if (!totalItems) {
+          totalItems = response.pagination.totalItems;
+        }
+      } while (movies.length < Number(_limit));
+
+      const test = Number(_limit) * (Number(_page) - 1) - (page * pageSize);
+      console.log(test);
+      
+      const items = movies.slice(test, test + Number(_limit)).map((item: any) => ({
         id: item._id,
         name: item.name,
         slug: item.slug,
         originName: item.origin_name,
-        thumbUrl: `${movies.pathImage}${item.thumb_url}`,
-        posterUrl: `${movies.pathImage}${item.poster_url}`,
+        thumbUrl: `${pathImage}${item.thumb_url}`,
+        posterUrl: `${pathImage}${item.poster_url}`,
         source: "ophim",
       }));
 
       const pagination = {
-        page: movies.pagination.currentPage,
-        limit: movies.pagination.totalItemsPerPage,
-        totalPages: movies.pagination.totalPages,
-        totalItems: movies.pagination.totalItems,
+        page: Number(_page),
+        limit: Number(_limit),
+        totalPages: Math.ceil(totalItems / Number(_limit)),
+        totalItems: totalItems,
       };
 
       res.status(200).json(new ApiResponse({ data: { items, pagination } }));
