@@ -12,20 +12,22 @@ export default async function handler(
     try {
       const { page: _page = 1, limit: _limit = 50 } = req.query;
 
+      const page = Number(_page);
+      const limit = Number(_limit) > 50 ? 50 : Number(_limit);
+
       const movies = [];
 
-      let page = Math.ceil(Number(_page) * Number(_limit) / pageSize);
+      let queryPage = Math.ceil(page * limit / pageSize);
       let pathImage = "";
       let totalItems = 0;
 
       do {
         const queryParams = new URLSearchParams();
-        queryParams.set("page", `${page}`);
+        queryParams.set("page", `${queryPage}`);
 
         const queryString = queryParams.toString();
 
-        page -= 1;
-        console.log(`${apiUrl}?${queryString}`);
+        queryPage -= 1;
 
         const response = await fetch(`${apiUrl}?${queryString}`).then((res) =>
           res.json()
@@ -38,12 +40,13 @@ export default async function handler(
         if (!totalItems) {
           totalItems = response.pagination.totalItems;
         }
-      } while (movies.length < Number(_limit));
+      } while (movies.length < limit);
 
-      const test = Number(_limit) * (Number(_page) - 1) - (page * pageSize);
-      console.log(test);
+      const startIndex = limit * (page - 1) - (queryPage * pageSize);
+      const endIndex = startIndex + limit;
+      console.log(startIndex, endIndex);
       
-      const items = movies.slice(test, test + Number(_limit)).map((item: any) => ({
+      const items = movies.slice(startIndex, endIndex).map((item: any) => ({
         id: item._id,
         name: item.name,
         slug: item.slug,
