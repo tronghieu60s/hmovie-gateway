@@ -10,10 +10,16 @@ export default async function handler(
 ) {
   if (req.method === "GET") {
     try {
-      const { page: _page = 1, limit: _limit = 50 } = req.query;
+      const { page: _page = 1, limit: _limit = 24 } = req.query;
 
+      let limit = Number(_limit);
       const page = Number(_page);
-      const limit = Number(_limit) > 50 ? 50 : Number(_limit);
+
+      if (limit < 10) {
+        limit = 10;
+      } else if (limit > 50) {
+        limit = 50;
+      }
 
       const movies = [];
 
@@ -44,7 +50,6 @@ export default async function handler(
 
       const startIndex = limit * (page - 1) - (queryPage * pageSize);
       const endIndex = startIndex + limit;
-      console.log(startIndex, endIndex);
       
       const items = movies.slice(startIndex, endIndex).map((item: any) => ({
         id: item._id,
@@ -57,10 +62,10 @@ export default async function handler(
       }));
 
       const pagination = {
-        page: Number(_page),
-        limit: Number(_limit),
-        totalPages: Math.ceil(totalItems / Number(_limit)),
-        totalItems: totalItems,
+        page,
+        limit,
+        totalPages: Math.ceil(totalItems / limit),
+        totalItems,
       };
 
       res.status(200).json(new ApiResponse({ data: { items, pagination } }));

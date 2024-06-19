@@ -1,24 +1,53 @@
 import { ApiResponse } from "@/core/dto/api-result.dto";
 import type { NextApiRequest, NextApiResponse } from "next";
 
+const apiUrl = "https://phimapi.com/danh-sach/phim-moi-cap-nhat";
+const pageSize = 10;
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   if (req.method === "GET") {
     try {
-      const { page = 1 } = req.query;
+      const { page: _page = 1, limit: _limit = 24 } = req.query;
 
-      const queryParams = new URLSearchParams();
-      queryParams.append("page", `${page}`);
+      let limit = Number(_limit);
+      const page = Number(_page);
 
-      const queryString = queryParams.toString();
+      if (limit < 10) {
+        limit = 10;
+      } else if (limit > 50) {
+        limit = 50;
+      }
 
-      const movies = await fetch(
-        `https://phimapi.com/danh-sach/phim-moi-cap-nhat?${queryString}`
-      ).then((res) => res.json());
+      const movies = [];
 
-      const items = movies.items.map((item: any) => ({
+      let queryPage = Math.ceil(page * limit / pageSize);
+      let totalItems = 0;
+
+      do {
+        const queryParams = new URLSearchParams();
+        queryParams.set("page", `${queryPage}`);
+
+        const queryString = queryParams.toString();
+
+        queryPage -= 1;
+
+        const response = await fetch(`${apiUrl}?${queryString}`).then((res) =>
+          res.json()
+        );
+
+        movies.unshift(...response.items);
+        if (!totalItems) {
+          totalItems = response.pagination.totalItems;
+        }
+      } while (movies.length < limit);
+
+      const startIndex = limit * (page - 1) - (queryPage * pageSize);
+      const endIndex = startIndex + limit;
+
+      const items = movies.slice(startIndex, endIndex).map((item: any) => ({
         id: item._id,
         name: item.name,
         slug: item.slug,
@@ -29,10 +58,10 @@ export default async function handler(
       }));
 
       const pagination = {
-        page: movies.pagination.currentPage,
-        limit: movies.pagination.totalItemsPerPage,
-        totalPages: movies.pagination.totalPages,
-        totalItems: movies.pagination.totalItems,
+        page,
+        limit,
+        totalPages: Math.ceil(totalItems / limit),
+        totalItems,
       };
 
       res.status(200).json(new ApiResponse({ data: { items, pagination } }));
