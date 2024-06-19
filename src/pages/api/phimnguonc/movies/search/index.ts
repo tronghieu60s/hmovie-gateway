@@ -13,13 +13,7 @@ export default async function handler(
       const { page: _page = 1, limit: _limit = 24, keyword = "" } = req.query;
 
       if (!keyword) {
-        res.status(400).json(
-          new ApiResponse({
-            data: null,
-            message: "keyword is required",
-            success: false,
-          })
-        );
+        throw new Error("keyword is required");
       }
 
       let limit = Number(_limit);

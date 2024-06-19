@@ -25,13 +25,7 @@ export default async function handler(
   }
 
   if (!Object.keys(taxonomyMapping).includes(taxonomy)) {
-    res.status(400).json(
-      new ApiResponse({
-        data: null,
-        message: "invalid taxonomy",
-        success: false,
-      })
-    );
+    throw new Error("invalid taxonomy");
   }
 
   const taxonomyValue = taxonomyMapping[taxonomy];

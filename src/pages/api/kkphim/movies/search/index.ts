@@ -1,71 +1,73 @@
 import { ApiResponse } from "@/core/dto/api-result.dto";
 import type { NextApiRequest, NextApiResponse } from "next";
 
+const apiUrl = "https://phimapi.com/v1/api/tim-kiem";
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const { page = 1, keyword = "" } = req.query;
+  if (req.method === "GET") {
+    try {
+      const { page: _page = 1, limit: _limit = 24, keyword = "" } = req.query;
 
-  const queryParams = new URLSearchParams();
-  queryParams.append("page", `${page}`);
-  queryParams.append("keyword", `${keyword}`);
+      if (!keyword) {
+        throw new Error("keyword is required");
+      }
 
-  const queryString = queryParams.toString();
+      let limit = Number(_limit);
+      const page = Number(_page);
 
-  if (!keyword) {
-    res.status(400).json(
-      new ApiResponse({
-        data: null,
-        message: "keyword is required",
-        success: false,
-      })
-    );
-  }
+      if (limit < 10) {
+        limit = 10;
+      } else if (limit > 50) {
+        limit = 50;
+      }
 
-  try {
-    const movies = await fetch(
-      `https://phimapi.com/v1/api/tim-kiem?${queryString}`
-    ).then((res) => res.json());
+      const queryParams = new URLSearchParams();
+      queryParams.append("limit", `${page * limit}`);
+      queryParams.append("keyword", `${keyword}`);
 
-    const items = movies.items.map((item: any) => ({
-      name: item.name,
-      slug: item.slug,
-      originName: item.origin_name,
-      thumbUrl: item.thumb_url,
-      posterUrl: item.poster_url,
-      content: item.description,
-      totalEpisodes: item.total_episodes,
-      currentEpisode: item.current_episode,
-      quality: item.quality,
-      duration: item.item,
-      language: item.language,
-      casts: (item.casts || "")
-        .split(",")
-        .map((item: string) => item.trim())
-        .filter((item: string) => item),
-      directors: (item.director || "")
-        ?.split(",")
-        .map((item: string) => item.trim())
-        .filter((item: string) => item),
-      source: "kkphim",
-    }));
+      const queryString = queryParams.toString();
 
-    const pagination = {
-      page: movies.paginate.current_page,
-      limit: movies.paginate.items_per_page,
-      totalPages: movies.paginate.total_page,
-      totalItems: movies.paginate.total_items,
-    };
+      const movies = await fetch(`${apiUrl}?${queryString}`).then((res) =>
+        res.json()
+      );
 
-    res.status(200).json(new ApiResponse({ data: { items, pagination } }));
-  } catch (error) {
-    res.status(500).json(
-      new ApiResponse({
-        data: null,
-        message: `${error}`,
-        success: false,
-      })
-    );
+      const pathImage = movies.data.APP_DOMAIN_CDN_IMAGE;
+
+      const moviesItems = movies.data.items.slice(
+        page * limit - limit,
+        page * limit
+      );
+
+      const items = moviesItems.map((item: any) => ({
+        name: item.name,
+        slug: item.slug,
+        originName: item.origin_name,
+        thumbUrl: `${pathImage}/${item.thumb_url}`,
+        posterUrl: `${pathImage}/${item.poster_url}`,
+        source: "kkphim",
+      }));
+
+      const totalItems = movies.data.params.pagination.totalItems;
+
+      const pagination = {
+        page,
+        limit,
+        totalPages: Math.ceil(totalItems / limit),
+        totalItems,
+      };
+
+      res.status(200).json(new ApiResponse({ data: { items, pagination } }));
+    } catch (error) {
+      res.status(500).json(
+        new ApiResponse({
+          data: null,
+          message: `${error}`,
+          success: false,
+        })
+      );
+    }
   }
 }
