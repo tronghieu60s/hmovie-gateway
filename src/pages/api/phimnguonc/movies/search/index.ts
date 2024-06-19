@@ -58,7 +58,9 @@ export default async function handler(
       const startIndex = limit * (page - 1) - queryPage * pageSize;
       const endIndex = startIndex + limit;
 
-      const items = movies.slice(startIndex, endIndex).map((item: any) => ({
+      const moviesItems = movies.slice(startIndex, endIndex);
+
+      const items = moviesItems.map((item: any) => ({
         name: item.name,
         slug: item.slug,
         originName: item.origin_name,
