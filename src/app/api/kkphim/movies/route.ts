@@ -1,4 +1,5 @@
 import { ApiResponse } from "@/core/dto/api-result.dto";
+import { getPaginationNewPerPage } from "@/core/pagination";
 
 const apiUrl = "https://phimapi.com/danh-sach/phim-moi-cap-nhat";
 const pageSize = 10;
@@ -21,41 +22,48 @@ export async function GET(request: Request) {
 
     const movies = [];
 
-    let queryPage = Math.ceil((page * limit) / pageSize);
+    const { startPage, endPage, startRecord, endRecord } =
+      getPaginationNewPerPage(page, pageSize, limit);
+
+    let queryPage = startPage;
     let totalItems = 0;
 
     do {
-      const queryParams = new URLSearchParams();
-      queryParams.set("page", `${queryPage}`);
+      const params = new URLSearchParams();
+      params.set("page", `${queryPage}`);
 
-      const queryString = queryParams.toString();
+      const queryString = params.toString();
 
-      queryPage -= 1;
+      const apiReq = `${apiUrl}?${queryString}`;
+      console.info(apiReq);
 
-      const response = await fetch(`${apiUrl}?${queryString}`).then((res) =>
-        res.json()
-      );
+      const response = await fetch(apiReq).then((res) => res.json());
 
-      movies.unshift(...response.items);
-      if (!totalItems) {
-        totalItems = response.pagination.totalItems;
+      queryPage += 1;
+
+      if (response) {
+        if (!totalItems) {
+          totalItems = response.pagination.totalItems;
+        }
+
+        const itemsData = response.items.map((item: any) => ({
+          id: item._id,
+          name: item.name,
+          slug: item.slug,
+          originName: item.origin_name,
+          thumbUrl: item.thumb_url,
+          posterUrl: item.poster_url,
+          source: "kkphim",
+        }));
+
+        movies.push(...itemsData);
       }
-    } while (movies.length < limit);
+    } while (queryPage <= endPage);
 
-    const startIndex = limit * (page - 1) - queryPage * pageSize;
-    const endIndex = startIndex + limit;
+    const startIndex = startRecord - pageSize * (startPage - 1) - 1;
+    const endIndex = endRecord - pageSize * (startPage - 1);
 
-    const moviesItems = movies.slice(startIndex, endIndex);
-
-    const items = moviesItems.map((item: any) => ({
-      id: item._id,
-      name: item.name,
-      slug: item.slug,
-      originName: item.origin_name,
-      thumbUrl: item.thumb_url,
-      posterUrl: item.poster_url,
-      source: "kkphim",
-    }));
+    const items = movies.slice(startIndex, endIndex);
 
     const pagination = {
       page,
