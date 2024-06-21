@@ -1,6 +1,7 @@
+import { getSlug } from "@/core/commonFuncs";
 import { ApiResponse } from "@/core/dto/api-result.dto";
 
-const apiUrl = "https://ophim1.com/phim";
+const apiUrl = "https://phim.nguonc.com/api/film";
 
 export async function GET(
   request: Request,
@@ -11,52 +12,45 @@ export async function GET(
 
     const movie = await fetch(`${apiUrl}/${slug}`).then((res) => res.json());
 
-    if (!movie.status) {
-      throw new Error(movie.msg);
-    }
-
     const data = {
-      id: movie.movie._id,
-      name: movie.movie.name,
+      id: movie.movie.id,
       slug: movie.movie.slug,
-      type: movie.movie.type,
-      status: movie.movie.status,
-      originName: movie.movie.origin_name,
-      content: movie.movie.content,
+      name: movie.movie.name,
+      originName: movie.movie.original_name,
+      content: movie.movie.description,
       thumbUrl: movie.movie.thumb_url,
       posterUrl: movie.movie.poster_url,
-      trailerUrl: movie.movie.trailer_url,
-      totalEpisodes: movie.movie.episode_total,
-      currentEpisode: movie.movie.episode_current,
+      totalEpisodes: movie.movie.total_episodes,
+      currentEpisode: movie.movie.current_episode,
       quality: movie.movie.quality,
       duration: movie.movie.time,
-      language: movie.movie.lang,
-      showtimes: movie.movie.showtimes,
-      publishYear: movie.movie.year,
-      casts: movie.movie.actor
+      language: movie.movie.language,
+      casts: (movie.movie.casts || "")
+        .split(",")
         .map((item: string) => item.trim())
         .filter((item: string) => item),
-      directors: movie.movie.director
+      directors: (movie.movie.director || "")
+        ?.split(",")
         .map((item: string) => item.trim())
         .filter((item: string) => item),
-      categories: movie.movie.category
-        .map((item: { name: string }) => item.name.trim())
-        .filter((item: string) => item),
-      countries: movie.movie.country
-        .map((item: { name: string }) => item.name.trim())
-        .filter((item: string) => item),
-      isTheater: movie.movie.chieurap,
-      isCopyright: movie.movie.is_copyright,
+      taxonomies: Object.values(movie.movie.category).map((item: any) => ({
+        group: {
+          name: item.group.name,
+          slug: getSlug(item.group.name),
+        },
+        categories: item.list.map((data: any) => ({
+          name: data.name,
+          slug: getSlug(data.name),
+        })),
+      })),
       episodes: Object.entries(
-        movie.episodes
+        movie.movie.episodes
           .flatMap((ep: any) =>
-            ep.server_data.map((data: any) => ({
+            ep.items.map((data: any) => ({
               name: data.name,
               slug: data.slug,
-              filename: data.filename,
               server: ep.server_name,
-              linkM3u8: data.link_m3u8,
-              linkEmbed: data.link_embed,
+              linkEmbed: data.embed,
             }))
           )
           .reduce((acc: any, cur: any) => {
@@ -69,13 +63,12 @@ export async function GET(
               };
             acc[cur.name].episodes.push({
               server: cur.server,
-              linkM3u8: cur.linkM3u8,
               linkEmbed: cur.linkEmbed,
             });
             return acc;
           }, {})
       ).map(([, v]) => v),
-      source: "ophim",
+      source: "phimnguonc",
     };
 
     return Response.json(new ApiResponse({ data }), {

@@ -1,6 +1,6 @@
 import { ApiResponse } from "@/core/dto/api-result.dto";
 
-const apiUrl = "https://ophim1.com/phim";
+const apiUrl = "https://phimapi.com/phim";
 
 export async function GET(
   request: Request,
@@ -10,10 +10,6 @@ export async function GET(
     const { slug } = params;
 
     const movie = await fetch(`${apiUrl}/${slug}`).then((res) => res.json());
-
-    if (!movie.status) {
-      throw new Error(movie.msg);
-    }
 
     const data = {
       id: movie.movie._id,
@@ -75,7 +71,7 @@ export async function GET(
             return acc;
           }, {})
       ).map(([, v]) => v),
-      source: "ophim",
+      source: "kkphim",
     };
 
     return Response.json(new ApiResponse({ data }), {
