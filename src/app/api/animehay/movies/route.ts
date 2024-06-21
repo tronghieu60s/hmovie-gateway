@@ -1,4 +1,5 @@
 import { ApiResponse } from "@/core/dto/api-result.dto";
+import { getPaginationNewPerPage } from "@/core/pagination";
 import * as cheerio from "cheerio";
 
 const apiUrl = "https://animehay.bio/phim-moi-cap-nhap/trang";
@@ -22,67 +23,73 @@ export async function GET(request: Request) {
 
     const movies = [];
 
-    const numberOfPage = Math.ceil(limit / pageSize);
-    const totalItemsDestination = numberOfPage * pageSize;
-    const queryPage = Math.ceil((page * limit) / pageSize);
+    const { startPage, endPage, startRecord, endRecord } =
+      getPaginationNewPerPage(page, pageSize, limit);
 
-    console.log(queryPage, numberOfPage, totalItemsDestination);
+    let queryPage = startPage;
+    let totalPages = 0;
 
-    // do {
-    //   const page = queryPage;
-    //   queryPage -= 1;
+    do {
+      const apiReq = `${apiUrl}-${queryPage}.html`;
+      console.info(apiReq);
 
-    //   const response = await fetch(`${apiUrl}-${page}.html`).then((res) =>
-    //     res.text()
-    //   );
+      const response = await fetch(apiReq).then((res) => res.text());
 
-    //   if (response) {
-    //     const $ = cheerio.load(response);
-    //     const items = $(".movies-list .movie-item");
+      queryPage += 1;
 
-    //     const itemsData = Array.from(items).map((item) => {
-    //       const href = $(item).children("a").attr("href") || "";
-    //       const episode = $(item).find(".episode-latest").text();
+      if (response) {
+        const $ = cheerio.load(response);
+        const items = $(".movies-list .movie-item");
 
-    //       const id = href.split("-")?.pop()?.replace(".html", "");
-    //       const name = $(item).children("a").attr("title");
-    //       const slug = href.split("/")?.pop()?.replace(".html", "");
-    //       const link = $(item).children("a").attr("href");
-    //       const posterUrl = $(item).find("img").attr("src");
-    //       const totalEpisodes = episode.split("/")?.[1]?.trim();
-    //       const currentEpisode = episode.split("/")?.[0]?.trim();
-    //       const rating = $(item).children("a").children(".score").text().trim();
-    //       return {
-    //         id,
-    //         name,
-    //         slug,
-    //         link,
-    //         posterUrl,
-    //         totalEpisodes,
-    //         currentEpisode,
-    //         rating,
-    //       };
-    //     });
+        const itemsData = Array.from(items).map((item) => {
+          const href = $(item).children("a").attr("href");
+          const episode = $(item).find(".episode-latest").text();
 
-    //     movies.unshift(...itemsData);
-    //   }
-    // } while (movies.length < limit);
+          const id = href?.split("-")?.pop()?.replace(".html", "") || "";
+          const name = $(item).children("a").attr("title") || "";
+          const slug = href?.split("/")?.pop()?.replace(".html", "") || "";
+          const link = $(item).children("a").attr("href") || "";
+          const thumbUrl = $(item).find("img").attr("src") || "";
+          const posterUrl = $(item).find("img").attr("src") || "";
+          const totalEpisodes = episode.split("/")?.[1]?.trim() || "";
+          const currentEpisode = episode.split("/")?.[0]?.trim() || "";
+          const rating =
+            $(item).children("a").children(".score").text().trim() || "";
+          return {
+            id,
+            name,
+            slug,
+            link,
+            thumbUrl,
+            posterUrl,
+            totalEpisodes,
+            currentEpisode,
+            rating,
+          };
+        });
 
-    // const startIndex = limit * (page - 1) - queryPage * pageSize;
-    // const endIndex = startIndex + limit;
+        if (!totalPages) {
+          const pagination = $(".pagination").find("a").last().attr("href");
+          totalPages = Number(pagination?.split("-")?.pop()?.replace(".html", "") || 0);
+        }
 
-    // const items = movies.slice(startIndex, endIndex);
+        movies.push(...itemsData);
+      }
+    } while (queryPage <= endPage);
 
-    // const totalItems = movies.length;
+    const startIndex = startRecord - pageSize * (startPage - 1) - 1;
+    const endIndex = endRecord - pageSize * (startPage - 1);
 
-    // const pagination = {
-    //   page: page,
-    //   limit: limit,
-    //   totalPages: Math.ceil(totalItems / limit),
-    //   totalItems,
-    // };
+    const items = movies.slice(startIndex, endIndex);
 
-    return Response.json(new ApiResponse({}), {
+    const pagination = {
+      page: page,
+      limit: limit,
+      totalPages: totalPages,
+      totalItems: totalPages * limit,
+    };
+
+    return Response.json(new ApiResponse({ data: { items, pagination } }), {
       headers: {
         "Cache-Control": "max-age=10",
         "CDN-Cache-Control": "max-age=60",
