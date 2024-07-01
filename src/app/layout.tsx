@@ -5,8 +5,8 @@ import "@/main/assets/globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "HMovie TV",
-  description: "HMovie TV by create next app",
+  title: "HMovie GateWay",
+  description: "HMovie GateWay by create next app",
 };
 
 export default function RootLayout({
