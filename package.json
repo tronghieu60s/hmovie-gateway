@@ -7,8 +7,6 @@
     "build": "next build",
     "vercel": "vercel deploy",
     "vercel:prod": "vercel deploy --prod",
-    "netlify": "netlify build && netlify deploy",
-    "netlify:prod": "netlify build && netlify deploy --prod",
     "start": "next start",
     "lint": "next lint"
   },
