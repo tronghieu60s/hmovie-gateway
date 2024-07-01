@@ -1,3 +1,4 @@
+import { apiCaller } from "@/core/api";
 import { getSlug } from "@/core/commonFuncs";
 import { ApiResponse } from "@/core/dto/api-result.dto";
 
@@ -5,12 +6,11 @@ const apiUrl = "https://phim.nguonc.com/api/film";
 
 export async function GET(
   request: Request,
-  { params }: { params: { slug: string } }
+  { params: { slug } }: { params: { slug: string } }
 ) {
   try {
-    const { slug } = params;
-
-    const movie = await fetch(`${apiUrl}/${slug}`).then((res) => res.json());
+    const apiReq = `${apiUrl}/${slug}`;
+    const movie = await apiCaller(apiReq).then((res) => res.json());
 
     const data = {
       id: movie.movie.id,
@@ -46,12 +46,14 @@ export async function GET(
       episodes: Object.entries(
         movie.movie.episodes
           .flatMap((ep: any) =>
-            ep.items.map((data: any) => ({
-              name: data.name,
-              slug: data.slug,
-              server: ep.server_name,
-              linkEmbed: data.embed,
-            }))
+            ep.items
+              .map((data: any) => ({
+                name: data.name,
+                slug: data.slug,
+                server: ep.server_name,
+                linkEmbed: data.embed,
+              }))
+              .filter((data: any) => data.name)
           )
           .reduce((acc: any, cur: any) => {
             if (!acc[cur.name])

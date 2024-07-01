@@ -1,16 +1,22 @@
+import { apiCaller } from "@/core/api";
 import { ApiResponse } from "@/core/dto/api-result.dto";
 import { getPaginationNewPerPage } from "@/core/pagination";
 
-const apiUrl = "https://ophim1.com/danh-sach/phim-moi-cap-nhat";
-const pageSize = 24;
+const apiUrl = "https://phim.nguonc.com/api/films/search";
+const pageSize = 10;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
 
   const _page = searchParams.get("page") || 1;
   const _limit = searchParams.get("limit") || 24;
+  const keyword = searchParams.get("keyword");
 
   try {
+    if (!keyword) {
+      throw new Error("keyword is required");
+    }
+
     let limit = Number(_limit);
     const page = Number(_page);
 
@@ -30,32 +36,44 @@ export async function GET(request: Request) {
 
     do {
       const params = new URLSearchParams();
-      params.set("page", `${queryPage}`);
+      params.append("page", `${queryPage}`);
+      params.append("keyword", `${keyword}`);
 
       const queryString = params.toString();
 
       const apiReq = `${apiUrl}?${queryString}`;
       console.info(apiReq);
 
-      const response = await fetch(apiReq).then((res) => res.json());
+      const response = await apiCaller(apiReq).then((res) => res.json());
 
       queryPage += 1;
 
       if (response) {
-        const pathImage = response.pathImage || "";
-
         if (!totalItems) {
-          totalItems = response.pagination.totalItems;
+          totalItems = response.paginate.total_items;
         }
 
         const itemsData = response.items.map((item: any) => ({
-          id: item._id,
           name: item.name,
           slug: item.slug,
-          originName: item.origin_name,
-          thumbUrl: `${pathImage}${item.thumb_url}`,
-          posterUrl: `${pathImage}${item.poster_url}`,
-          source: "ophim",
+          originName: item.original_name,
+          thumbUrl: item.thumb_url,
+          posterUrl: item.poster_url,
+          content: item.description,
+          totalEpisodes: item.total_episodes,
+          currentEpisode: item.current_episode,
+          quality: item.quality,
+          duration: item.item,
+          language: item.language,
+          casts: (item.casts || "")
+            .split(",")
+            .map((item: string) => item.trim())
+            .filter((item: string) => item),
+          directors: (item.director || "")
+            ?.split(",")
+            .map((item: string) => item.trim())
+            .filter((item: string) => item),
+          source: "phimnguonc",
         }));
 
         movies.push(...itemsData);

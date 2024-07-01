@@ -1,3 +1,4 @@
+import { apiCaller } from "@/core/api";
 import { ApiResponse } from "@/core/dto/api-result.dto";
 import { getPaginationNewPerPage } from "@/core/pagination";
 
@@ -35,9 +36,7 @@ export async function GET(request: Request) {
       const queryString = params.toString();
 
       const apiReq = `${apiUrl}?${queryString}`;
-      console.info(apiReq);
-
-      const response = await fetch(apiReq).then((res) => res.json());
+      const response = await apiCaller(apiReq).then((res) => res.json());
 
       queryPage += 1;
 

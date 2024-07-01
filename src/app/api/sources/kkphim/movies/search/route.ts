@@ -1,3 +1,4 @@
+import { apiCaller } from "@/core/api";
 import { ApiResponse } from "@/core/dto/api-result.dto";
 
 const apiUrl = "https://phimapi.com/v1/api/tim-kiem";
@@ -11,7 +12,7 @@ export async function GET(request: Request) {
 
   try {
     if (!keyword) {
-      throw new Error("keyword is required");
+      throw new Error("Keyword is required");
     }
 
     let limit = Number(_limit);
@@ -23,21 +24,23 @@ export async function GET(request: Request) {
       limit = 50;
     }
 
-    const queryParams = new URLSearchParams();
-    queryParams.append("limit", `${page * limit}`);
-    queryParams.append("keyword", `${keyword}`);
+    const params = new URLSearchParams();
+    params.append("limit", `${page * limit}`);
+    params.append("keyword", `${keyword}`);
 
-    const queryString = queryParams.toString();
+    const queryString = params.toString();
 
-    const movies = await fetch(`${apiUrl}?${queryString}`).then((res) =>
-      res.json()
-    );
+    const apiReq = `${apiUrl}?${queryString}`;
+    console.info(apiReq);
 
-    const pathImage = movies.data.APP_DOMAIN_CDN_IMAGE;
+    const response = await apiCaller(apiReq).then((res) => res.json());
 
-    const moviesItems = movies.data.items.slice(
+    const pathImage = response.data.APP_DOMAIN_CDN_IMAGE;
+    const totalItems = response.data.params.pagination.totalItems;
+
+    const moviesItems = response.data.items.slice(
       page * limit - limit,
-      page * limit
+      page * limit,
     );
 
     const items = moviesItems.map((item: any) => ({
@@ -48,8 +51,6 @@ export async function GET(request: Request) {
       posterUrl: `${pathImage}/${item.poster_url}`,
       source: "kkphim",
     }));
-
-    const totalItems = movies.data.params.pagination.totalItems;
 
     const pagination = {
       page,

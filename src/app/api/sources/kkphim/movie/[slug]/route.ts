@@ -1,15 +1,15 @@
+import { apiCaller } from "@/core/api";
 import { ApiResponse } from "@/core/dto/api-result.dto";
 
 const apiUrl = "https://phimapi.com/phim";
 
 export async function GET(
   request: Request,
-  { params }: { params: { slug: string } }
+  { params: { slug } }: { params: { slug: string } }
 ) {
   try {
-    const { slug } = params;
-
-    const movie = await fetch(`${apiUrl}/${slug}`).then((res) => res.json());
+    const apiReq = `${apiUrl}/${slug}`;
+    const movie = await apiCaller(apiReq).then((res) => res.json());
 
     const data = {
       id: movie.movie._id,
@@ -46,14 +46,16 @@ export async function GET(
       episodes: Object.entries(
         movie.episodes
           .flatMap((ep: any) =>
-            ep.server_data.map((data: any) => ({
-              name: data.name,
-              slug: data.slug,
-              filename: data.filename,
-              server: ep.server_name,
-              linkM3u8: data.link_m3u8,
-              linkEmbed: data.link_embed,
-            }))
+            ep.server_data
+              .map((data: any) => ({
+                name: data.name,
+                slug: data.slug,
+                filename: data.filename,
+                server: ep.server_name,
+                linkM3u8: data.link_m3u8,
+                linkEmbed: data.link_embed,
+              }))
+              .filter((data: any) => data.name)
           )
           .reduce((acc: any, cur: any) => {
             if (!acc[cur.name])
