@@ -1,8 +1,4 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-  images: {
-    domains: ["img.ophim.live"],
-  },
-};
+const nextConfig = {};
 
 export default nextConfig;
