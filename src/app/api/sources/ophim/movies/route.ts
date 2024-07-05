@@ -48,7 +48,6 @@ export async function GET(request: Request) {
         }
 
         const itemsData = response.items.map((item: any) => ({
-          id: item._id,
           name: item.name,
           slug: item.slug,
           originName: item.origin_name,

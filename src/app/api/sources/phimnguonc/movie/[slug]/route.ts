@@ -13,9 +13,8 @@ export async function GET(
     const movie = await apiCaller(apiReq).then((res) => res.json());
 
     const data = {
-      id: movie.movie.id,
-      slug: movie.movie.slug,
       name: movie.movie.name,
+      slug: movie.movie.slug,
       originName: movie.movie.original_name,
       content: movie.movie.description,
       thumbUrl: movie.movie.thumb_url,

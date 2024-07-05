@@ -1,17 +1,24 @@
 import { apiCaller } from "@/core/api";
 import { ApiResponse } from "@/core/dto/api-result.dto";
 import { getPaginationNewPerPage } from "@/core/pagination";
+import * as cheerio from "cheerio";
+import { randomUUID } from "crypto";
 
-const apiUrl = "https://phimapi.com/danh-sach/phim-moi-cap-nhat";
-const pageSize = 10;
+const apiUrl = "https://ophim17.cc/tim-kiem";
+const pageSize = 24;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
 
   const _page = searchParams.get("page") || 1;
   const _limit = searchParams.get("limit") || 24;
+  const keyword = searchParams.get("keyword");
 
   try {
+    if (!keyword) {
+      throw new Error("Keyword is required");
+    }
+
     let limit = Number(_limit);
     const page = Number(_page);
 
@@ -32,27 +39,54 @@ export async function GET(request: Request) {
     do {
       const params = new URLSearchParams();
       params.set("page", `${queryPage}`);
+      params.append("keyword", `${keyword}`);
 
       const queryString = params.toString();
 
       const apiReq = `${apiUrl}?${queryString}`;
-      const response = await apiCaller(apiReq).then((res) => res.json());
+      const response = await apiCaller(apiReq).then((res) => res.text());
 
       queryPage += 1;
 
       if (response) {
-        if (!totalItems) {
-          totalItems = response.pagination.totalItems;
-        }
+        const $ = cheerio.load(response);
+        console.log($("title").text());
 
-        const itemsData = response.items.map((item: any) => ({
-          name: item.name,
-          slug: item.slug,
-          originName: item.origin_name,
-          thumbUrl: item.thumb_url,
-          posterUrl: item.poster_url,
-          source: "kkphim",
-        }));
+        const items = $("table tbody tr");
+        const itemsData = Array.from(items).map((item) => {
+          const href = $(item).find("a").attr("href") || "";
+
+          const name =
+            $(item)
+              .find("h3")
+              ?.clone()
+              ?.children()
+              ?.remove()
+              ?.end()
+              ?.text()
+              ?.trim() || "";
+          const slug = href.replace("/phim/", "");
+          const originName =
+            $(item)
+              .find("h4")
+              ?.text()
+              ?.trim()
+              ?.replace(/^\((.*)\)$/, "$1") || "";
+          return {
+            name,
+            slug,
+            originName,
+            thumbUrl: `https://img.ophim.live/uploads/movies/${slug}-thumb.jpg`,
+            posterUrl: `https://img.ophim.live//uploads/movies/${slug}-poster.jpg`,
+            source: "ophim",
+          };
+        });
+
+        if (!totalItems) {
+          const pagination =
+            $("table").next()?.find("span:nth-child(3)")?.text() || 0;
+          totalItems = Number(pagination);
+        }
 
         movies.push(...itemsData);
       }

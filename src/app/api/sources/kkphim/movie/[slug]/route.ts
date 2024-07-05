@@ -12,7 +12,6 @@ export async function GET(
     const movie = await apiCaller(apiReq).then((res) => res.json());
 
     const data = {
-      id: movie.movie._id,
       name: movie.movie.name,
       slug: movie.movie.slug,
       type: movie.movie.type,

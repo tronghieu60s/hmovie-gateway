@@ -1,9 +1,10 @@
 import { apiCaller } from "@/core/api";
 import { ApiResponse } from "@/core/dto/api-result.dto";
 import { getPaginationNewPerPage } from "@/core/pagination";
+import * as cheerio from "cheerio";
 
-const apiUrl = "https://phimapi.com/danh-sach/phim-moi-cap-nhat";
-const pageSize = 10;
+const apiUrl = "https://animehay.bio/phim-moi-cap-nhap/trang";
+const pageSize = 30;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -27,32 +28,52 @@ export async function GET(request: Request) {
       getPaginationNewPerPage(page, pageSize, limit);
 
     let queryPage = startPage;
-    let totalItems = 0;
+    let totalPages = 0;
 
     do {
-      const params = new URLSearchParams();
-      params.set("page", `${queryPage}`);
+      const apiReq = `${apiUrl}-${queryPage}.html`;
+      console.info(apiReq);
 
-      const queryString = params.toString();
-
-      const apiReq = `${apiUrl}?${queryString}`;
-      const response = await apiCaller(apiReq).then((res) => res.json());
+      const response = await apiCaller(apiReq, "GET", {
+        headers: {
+          "User-Agent": "Googlebot/2.1 (+http://www.google.com/bot.html)",
+        },
+      }).then((res) => res.text());
 
       queryPage += 1;
 
       if (response) {
-        if (!totalItems) {
-          totalItems = response.pagination.totalItems;
-        }
+        const $ = cheerio.load(response);
+        console.log($("title").text());
 
-        const itemsData = response.items.map((item: any) => ({
-          name: item.name,
-          slug: item.slug,
-          originName: item.origin_name,
-          thumbUrl: item.thumb_url,
-          posterUrl: item.poster_url,
-          source: "kkphim",
-        }));
+        const items = $(".movies-list .movie-item");
+
+        const itemsData = Array.from(items).map((item) => {
+          const name = $(item).children("a")?.attr("title")?.trim() || "";
+          const slug =
+            $(item)
+              .children("a")
+              ?.attr("href")
+              ?.split("/")
+              ?.pop()
+              ?.replace(".html", "") || "";
+          const thumbUrl = $(item).find("img")?.attr("src") || "";
+          const posterUrl = $(item).find("img")?.attr("src") || "";
+          return {
+            name,
+            slug,
+            thumbUrl,
+            posterUrl,
+            source: "animehay",
+          };
+        });
+
+        if (!totalPages) {
+          const pagination = $(".pagination").find("a").last().attr("href");
+          totalPages = Number(
+            pagination?.split("-")?.pop()?.replace(".html", "") || 0
+          );
+        }
 
         movies.push(...itemsData);
       }
@@ -64,10 +85,10 @@ export async function GET(request: Request) {
     const items = movies.slice(startIndex, endIndex);
 
     const pagination = {
-      page,
-      limit,
-      totalPages: Math.ceil(totalItems / limit),
-      totalItems,
+      page: page,
+      limit: limit,
+      totalPages: totalPages,
+      totalItems: totalPages * limit,
     };
 
     return Response.json(new ApiResponse({ data: { items, pagination } }), {
