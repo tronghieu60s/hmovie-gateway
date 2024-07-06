@@ -1,5 +1,6 @@
 import { apiCaller } from "@/core/api";
 import { ApiResponse } from "@/core/dto/api-result.dto";
+import { MoviesResponse } from "@/core/dto/movies/movies.dto";
 import { getPaginationNewPerPage } from "@/core/pagination";
 import * as cheerio from "cheerio";
 
@@ -59,13 +60,13 @@ export async function GET(request: Request) {
               ?.replace(".html", "") || "";
           const thumbUrl = $(item).find("img")?.attr("src") || "";
           const posterUrl = $(item).find("img")?.attr("src") || "";
-          return {
+          return new MoviesResponse({
             name,
             slug,
             thumbUrl,
             posterUrl,
             source: "animehay",
-          };
+          });
         });
 
         if (!totalPages) {

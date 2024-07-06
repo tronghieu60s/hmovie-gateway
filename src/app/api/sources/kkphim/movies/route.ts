@@ -1,5 +1,6 @@
 import { apiCaller } from "@/core/api";
 import { ApiResponse } from "@/core/dto/api-result.dto";
+import { MoviesResponse } from "@/core/dto/movies/movies.dto";
 import { getPaginationNewPerPage } from "@/core/pagination";
 
 const apiUrl = "https://phimapi.com/danh-sach/phim-moi-cap-nhat";
@@ -45,7 +46,7 @@ export async function GET(request: Request) {
           totalItems = response.pagination.totalItems;
         }
 
-        const itemsData = response.items.map((item: any) => ({
+        const itemsData = response.items.map((item: any) => new MoviesResponse({
           name: item.name,
           slug: item.slug,
           originName: item.origin_name,

@@ -1,5 +1,6 @@
 import { apiCaller } from "@/core/api";
 import { ApiResponse } from "@/core/dto/api-result.dto";
+import { MoviesResponse } from "@/core/dto/movies/movies.dto";
 import { getPaginationNewPerPage } from "@/core/pagination";
 
 const apiUrl = "https://phim.nguonc.com/api/films/search";
@@ -53,28 +54,17 @@ export async function GET(request: Request) {
           totalItems = response.paginate.total_items;
         }
 
-        const itemsData = response.items.map((item: any) => ({
-          name: item.name,
-          slug: item.slug,
-          originName: item.original_name,
-          thumbUrl: item.thumb_url,
-          posterUrl: item.poster_url,
-          content: item.description,
-          totalEpisodes: item.total_episodes,
-          currentEpisode: item.current_episode,
-          quality: item.quality,
-          duration: item.item,
-          language: item.language,
-          casts: (item.casts || "")
-            .split(",")
-            .map((item: string) => item.trim())
-            .filter((item: string) => item),
-          directors: (item.director || "")
-            ?.split(",")
-            .map((item: string) => item.trim())
-            .filter((item: string) => item),
-          source: "phimnguonc",
-        }));
+        const itemsData = response.items.map(
+          (item: any) =>
+            new MoviesResponse({
+              name: item.name,
+              slug: item.slug,
+              originName: item.original_name,
+              thumbUrl: item.thumb_url,
+              posterUrl: item.poster_url,
+              source: "phimnguonc",
+            })
+        );
 
         movies.push(...itemsData);
       }

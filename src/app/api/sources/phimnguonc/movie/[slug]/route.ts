@@ -1,6 +1,6 @@
 import { apiCaller } from "@/core/api";
-import { getSlug } from "@/core/commonFuncs";
 import { ApiResponse } from "@/core/dto/api-result.dto";
+import { MovieResponse } from "@/core/dto/movies/movies.dto";
 
 const apiUrl = "https://phim.nguonc.com/api/film";
 
@@ -11,8 +11,20 @@ export async function GET(
   try {
     const apiReq = `${apiUrl}/${slug}`;
     const movie = await apiCaller(apiReq).then((res) => res.json());
+    
+    if (movie.status === "error") {
+      throw new Error(movie.message);
+    }
 
-    const data = {
+    const categories: any = Object.values(movie.movie.category).reduce(
+      (acc: any, cur: any) => {
+        acc[cur.group.name] = cur.list.map((item: any) => item.name);
+        return acc;
+      },
+      {}
+    );
+
+    const data = new MovieResponse({
       name: movie.movie.name,
       slug: movie.movie.slug,
       originName: movie.movie.original_name,
@@ -24,24 +36,18 @@ export async function GET(
       quality: movie.movie.quality,
       duration: movie.movie.time,
       language: movie.movie.language,
+      publishYear: Number(categories["Năm"][0]),
       casts: (movie.movie.casts || "")
         .split(",")
         .map((item: string) => item.trim())
         .filter((item: string) => item),
+      formats: categories["Định dạng"],
       directors: (movie.movie.director || "")
         ?.split(",")
         .map((item: string) => item.trim())
         .filter((item: string) => item),
-      taxonomies: Object.values(movie.movie.category).map((item: any) => ({
-        group: {
-          name: item.group.name,
-          slug: getSlug(item.group.name),
-        },
-        categories: item.list.map((data: any) => ({
-          name: data.name,
-          slug: getSlug(data.name),
-        })),
-      })),
+      categories: categories["Thể loại"],
+      countries: categories["Quốc gia"],
       episodes: Object.entries(
         movie.movie.episodes
           .flatMap((ep: any) =>
@@ -68,9 +74,9 @@ export async function GET(
             });
             return acc;
           }, {})
-      ).map(([, v]) => v),
+      ).map(([, v]) => v) as MovieResponse["episodes"],
       source: "phimnguonc",
-    };
+    });
 
     return Response.json(new ApiResponse({ data }), {
       headers: {

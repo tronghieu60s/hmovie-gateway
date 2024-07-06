@@ -1,5 +1,6 @@
 import { apiCaller } from "@/core/api";
 import { ApiResponse } from "@/core/dto/api-result.dto";
+import { MoviesResponse } from "@/core/dto/movies/movies.dto";
 import { getPaginationNewPerPage } from "@/core/pagination";
 import * as cheerio from "cheerio";
 import { randomUUID } from "crypto";
@@ -16,7 +17,7 @@ export async function GET(request: Request) {
 
   try {
     if (!keyword) {
-      throw new Error("Keyword is required");
+      throw new Error("keyword is required");
     }
 
     let limit = Number(_limit);
@@ -72,14 +73,14 @@ export async function GET(request: Request) {
               ?.text()
               ?.trim()
               ?.replace(/^\((.*)\)$/, "$1") || "";
-          return {
+          return new MoviesResponse({
             name,
             slug,
             originName,
             thumbUrl: `https://img.ophim.live/uploads/movies/${slug}-thumb.jpg`,
             posterUrl: `https://img.ophim.live//uploads/movies/${slug}-poster.jpg`,
             source: "ophim",
-          };
+          });
         });
 
         if (!totalItems) {

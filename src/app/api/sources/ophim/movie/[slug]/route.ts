@@ -1,5 +1,6 @@
 import { apiCaller } from "@/core/api";
 import { ApiResponse } from "@/core/dto/api-result.dto";
+import { MovieResponse } from "@/core/dto/movies/movies.dto";
 
 const apiUrl = "https://ophim1.com/phim";
 
@@ -15,7 +16,7 @@ export async function GET(
       throw new Error(movie.msg);
     }
 
-    const data = {
+    const data = new MovieResponse({
       name: movie.movie.name,
       slug: movie.movie.slug,
       type: movie.movie.type,
@@ -30,7 +31,7 @@ export async function GET(
       quality: movie.movie.quality,
       duration: movie.movie.time,
       language: movie.movie.lang,
-      showtimes: movie.movie.showtimes,
+      showTimes: movie.movie.showTimes,
       publishYear: movie.movie.year,
       casts: movie.movie.actor
         .map((item: string) => item.trim())
@@ -75,9 +76,9 @@ export async function GET(
             });
             return acc;
           }, {})
-      ).map(([, v]) => v),
+      ).map(([, v]) => v) as MovieResponse["episodes"],
       source: "ophim",
-    };
+    });
 
     return Response.json(new ApiResponse({ data }), {
       headers: {

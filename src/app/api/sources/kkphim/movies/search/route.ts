@@ -1,5 +1,6 @@
 import { apiCaller } from "@/core/api";
 import { ApiResponse } from "@/core/dto/api-result.dto";
+import { MoviesResponse } from "@/core/dto/movies/movies.dto";
 
 const apiUrl = "https://phimapi.com/v1/api/tim-kiem";
 
@@ -12,7 +13,7 @@ export async function GET(request: Request) {
 
   try {
     if (!keyword) {
-      throw new Error("Keyword is required");
+      throw new Error("keyword is required");
     }
 
     let limit = Number(_limit);
@@ -43,7 +44,7 @@ export async function GET(request: Request) {
       page * limit,
     );
 
-    const items = moviesItems.map((item: any) => ({
+    const items = moviesItems.map((item: any) => new MoviesResponse({
       name: item.name,
       slug: item.slug,
       originName: item.origin_name,
