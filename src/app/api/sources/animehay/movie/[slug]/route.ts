@@ -18,6 +18,7 @@ export async function GET(
     }).then((res) => res.text());
 
     const $ = cheerio.load(movie);
+    console.log($("title").text());
 
     const name = $(".info-movie .heading_movie").text() || "";
     const status =

@@ -1,10 +1,11 @@
 import { apiCaller } from "@/core/api";
+import { getSlug } from "@/core/commonFuncs";
 import { ApiResponse } from "@/core/dto/api-result.dto";
 import { MoviesResponse } from "@/core/dto/movies/movies.dto";
 import { getPaginationNewPerPage } from "@/core/pagination";
 import * as cheerio from "cheerio";
 
-const apiUrl = "https://animehay.bio/phim-moi-cap-nhap/trang";
+const apiUrl = "https://animehay.bio/tim-kiem";
 const pageSize = 30;
 
 export async function GET(request: Request) {
@@ -12,8 +13,13 @@ export async function GET(request: Request) {
 
   const _page = searchParams.get("page") || 1;
   const _limit = searchParams.get("limit") || 24;
+  const keyword = searchParams.get("keyword");
 
   try {
+    if (!keyword) {
+      throw new Error("keyword is required");
+    }
+
     let limit = Number(_limit);
     const page = Number(_page);
 
@@ -32,7 +38,7 @@ export async function GET(request: Request) {
     let totalPages = 0;
 
     do {
-      const apiReq = `${apiUrl}-${queryPage}.html`;
+      const apiReq = `${apiUrl}/${getSlug(keyword)}/trang-${queryPage}.html`;
       const response = await apiCaller(apiReq, "GET", {
         headers: {
           "User-Agent": "Googlebot/2.1 (+http://www.google.com/bot.html)",
