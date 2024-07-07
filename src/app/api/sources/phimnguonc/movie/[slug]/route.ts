@@ -1,6 +1,6 @@
 import { apiCaller } from "@/core/api";
 import { ApiResponse } from "@/core/dto/api-result.dto";
-import { MovieResponse } from "@/core/dto/movies/movies.dto";
+import { MovieResponse, MoviesEpisodeResponse } from "@/core/dto/movies/movies.dto";
 
 const apiUrl = "https://phim.nguonc.com/api/film";
 
@@ -74,7 +74,7 @@ export async function GET(
             });
             return acc;
           }, {})
-      ).map(([, v]) => v) as MovieResponse["episodes"],
+      ).map(([, v]) => v) as MoviesEpisodeResponse[],
       source: "phimnguonc",
     });
 

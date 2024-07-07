@@ -26,16 +26,7 @@ export class MovieResponse {
   }[];
   isTheater?: boolean;
   isCopyright?: boolean;
-  episodes: {
-    name: string;
-    slug: string;
-    filename?: string;
-    episodes?: {
-      server: string;
-      linkEmbed: string;
-      linkM3u8: string;
-    }[];
-  }[];
+  episodes: MoviesEpisodeResponse[];
   source: string;
 
   constructor(data: MovieResponse) {
@@ -82,5 +73,23 @@ export class MoviesResponse {
     this.thumbUrl = data.thumbUrl;
     this.posterUrl = data.posterUrl;
     this.source = data.source;
+  }
+}
+
+export class MoviesEpisodeResponse {
+  name: string;
+  slug: string;
+  filename?: string;
+  episodes?: {
+    server: string;
+    linkM3u8?: string;
+    linkEmbed?: string;
+  }[];
+
+  constructor(data: MoviesEpisodeResponse) {
+    this.name = data.name;
+    this.slug = data.slug;
+    this.filename = data.filename || "";
+    this.episodes = data.episodes || [];
   }
 }

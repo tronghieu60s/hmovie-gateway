@@ -1,6 +1,6 @@
 import { apiCaller } from "@/core/api";
 import { ApiResponse } from "@/core/dto/api-result.dto";
-import { MovieResponse, MoviesResponse } from "@/core/dto/movies/movies.dto";
+import { MovieResponse, MoviesEpisodeResponse, MoviesResponse } from "@/core/dto/movies/movies.dto";
 
 const apiUrl = "https://phimapi.com/phim";
 
@@ -72,7 +72,7 @@ export async function GET(
             });
             return acc;
           }, {})
-      ).map(([, v]) => v) as MovieResponse["episodes"],
+      ).map(([, v]) => v) as MoviesEpisodeResponse[],
       source: "kkphim",
     });
 

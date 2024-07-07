@@ -3,7 +3,7 @@ import { ApiResponse } from "@/core/dto/api-result.dto";
 import { MovieResponse } from "@/core/dto/movies/movies.dto";
 import * as cheerio from "cheerio";
 
-const apiUrl = "https://animehay.bio/thong-tin-phim/";
+const apiUrl = "https://animehay.bio/thong-tin-phim";
 
 export async function GET(
   request: Request,
@@ -61,7 +61,7 @@ export async function GET(
       })
     );
     const episodes = Array.from($(".list-item-episode > a")).map((item) => ({
-      name: $(item).attr("title")?.trim() || "",
+      name: $(item).text()?.trim() || "",
       slug: $(item).attr("href")?.split("/")?.pop()?.replace(".html", "") || "",
     }));
 
