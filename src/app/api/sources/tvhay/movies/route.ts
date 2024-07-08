@@ -4,21 +4,16 @@ import { MoviesResponse } from "@/core/dto/movies/movies.dto";
 import { getPaginationNewPerPage } from "@/core/pagination";
 import * as cheerio from "cheerio";
 
-const apiUrl = "https://animehay.bio/tim-kiem";
-const pageSize = 30;
+const apiUrl = "https://tvhay.in/phim-moi/page";
+const pageSize = 40;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
 
   const _page = searchParams.get("page") || 1;
   const _limit = searchParams.get("limit") || 24;
-  const keyword = searchParams.get("keyword");
 
   try {
-    if (!keyword) {
-      throw new Error("keyword is required");
-    }
-
     let limit = Number(_limit);
     const page = Number(_page);
 
@@ -37,7 +32,7 @@ export async function GET(request: Request) {
     let totalPages = 0;
 
     do {
-      const apiReq = `${apiUrl}/${encodeURIComponent(keyword)}/trang-${queryPage}.html`;
+      const apiReq = `${apiUrl}/${queryPage}`;
       const response = await apiCaller(apiReq, "GET", {
         headers: {
           "User-Agent": "Googlebot/2.1 (+http://www.google.com/bot.html)",
@@ -50,33 +45,44 @@ export async function GET(request: Request) {
         const $ = cheerio.load(response);
         console.log($("title").text());
 
-        const items = $(".movies-list .movie-item");
+        const items = $(".list-film li");
 
         const itemsData = Array.from(items).map((item) => {
-          const name = $(item).children("a")?.attr("title")?.trim() || "";
+          const name =
+            $(item)
+              .find(".info .name a")
+              ?.clone()
+              ?.children()
+              ?.remove()
+              ?.end()
+              ?.text()
+              ?.trim() || "";
           const slug =
             $(item)
-              .children("a")
+              .find(".inner a")
               ?.attr("href")
+              ?.slice(1, -1)
               ?.split("/")
-              ?.pop()
-              ?.replace(".html", "") || "";
-          const thumbUrl = $(item).find("img")?.attr("src") || "";
-          const posterUrl = $(item).find("img")?.attr("src") || "";
+              ?.pop() || "";
+          const originName = $(item).find(".info .name2")?.text()?.trim() || "";
+          const thumbUrl =
+            $(item).find(".inner img")?.attr("data-original") || "";
+          const posterUrl =
+            $(item).find(".inner img")?.attr("data-original") || "";
+
           return new MoviesResponse({
             name,
             slug,
+            originName,
             thumbUrl,
             posterUrl,
-            source: "animehay",
+            source: "tvhay",
           });
         });
 
         if (!totalPages) {
-          const pagination = $(".pagination").find("a").last().attr("href");
-          totalPages = Number(
-            pagination?.split("-")?.pop()?.replace(".html", "") || 0
-          );
+          const pagination = $(".wp-pagenavi").find("a").last().attr("href");
+          totalPages = Number(pagination?.slice(1, -1)?.split("/")?.pop() || 0);
         }
 
         movies.push(...itemsData);
