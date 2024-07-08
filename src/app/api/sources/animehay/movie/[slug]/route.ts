@@ -20,7 +20,11 @@ export async function GET(
     const $ = cheerio.load(movie);
     console.log($("title").text());
 
-    const name = $(".info-movie .heading_movie").text() || "";
+    if ($('.ah_404').length > 0) {
+      throw new Error("not found");
+    }
+
+    const name = $(".info-movie .heading_movie").text().trim() || "";
     const status =
       $(".info-movie .status > div:nth-child(2)").text().trim() || "";
     const _slug =
@@ -84,8 +88,8 @@ export async function GET(
       currentEpisode,
       duration,
       publishYear: Number(publishYear),
-      categories,
       countries,
+      categories,
       connections,
       episodes,
       source: "animehay",

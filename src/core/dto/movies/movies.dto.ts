@@ -16,14 +16,12 @@ export class MovieResponse {
   showTimes?: string;
   publishYear?: number;
   casts?: string[];
-  formats?: string[];
   directors?: string[];
-  categories?: string[];
+  formats?: string[];
   countries?: string[];
-  connections?: {
-    name: string;
-    slug: string;
-  }[];
+  tags?: string[];
+  categories?: string[];
+  connections?: { name: string; slug: string }[];
   isTheater?: boolean;
   isCopyright?: boolean;
   episodes: MoviesEpisodeResponse[];
@@ -46,10 +44,11 @@ export class MovieResponse {
     this.showTimes = data.showTimes || "";
     this.publishYear = data.publishYear || 0;
     this.casts = data.casts || [];
-    this.formats = data.formats || [];
     this.directors = data.directors || [];
-    this.categories = data.categories || [];
+    this.formats = data.formats || [];
     this.countries = data.countries || [];
+    this.tags = data.tags || [];
+    this.categories = data.categories || [];
     this.connections = data.connections || [];
     this.isTheater = data.isTheater || false;
     this.isCopyright = data.isCopyright || false;

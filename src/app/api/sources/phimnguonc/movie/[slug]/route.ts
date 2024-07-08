@@ -1,6 +1,9 @@
 import { apiCaller } from "@/core/api";
 import { ApiResponse } from "@/core/dto/api-result.dto";
-import { MovieResponse, MoviesEpisodeResponse } from "@/core/dto/movies/movies.dto";
+import {
+  MovieResponse,
+  MoviesEpisodeResponse,
+} from "@/core/dto/movies/movies.dto";
 
 const apiUrl = "https://phim.nguonc.com/api/film";
 
@@ -11,9 +14,9 @@ export async function GET(
   try {
     const apiReq = `${apiUrl}/${slug}`;
     const movie = await apiCaller(apiReq).then((res) => res.json());
-    
+
     if (movie.status === "error") {
-      throw new Error(movie.message);
+      throw new Error("not found");
     }
 
     const categories: any = Object.values(movie.movie.category).reduce(
@@ -41,13 +44,13 @@ export async function GET(
         .split(",")
         .map((item: string) => item.trim())
         .filter((item: string) => item),
-      formats: categories["Định dạng"],
       directors: (movie.movie.director || "")
         ?.split(",")
         .map((item: string) => item.trim())
         .filter((item: string) => item),
-      categories: categories["Thể loại"],
+      formats: categories["Định dạng"],
       countries: categories["Quốc gia"],
+      categories: categories["Thể loại"],
       episodes: Object.entries(
         movie.movie.episodes
           .flatMap((ep: any) =>

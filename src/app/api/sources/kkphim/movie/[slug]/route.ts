@@ -1,6 +1,10 @@
 import { apiCaller } from "@/core/api";
 import { ApiResponse } from "@/core/dto/api-result.dto";
-import { MovieResponse, MoviesEpisodeResponse, MoviesResponse } from "@/core/dto/movies/movies.dto";
+import {
+  MovieResponse,
+  MoviesEpisodeResponse,
+  MoviesResponse,
+} from "@/core/dto/movies/movies.dto";
 
 const apiUrl = "https://phimapi.com/phim";
 
@@ -11,6 +15,10 @@ export async function GET(
   try {
     const apiReq = `${apiUrl}/${slug}`;
     const movie = await apiCaller(apiReq).then((res) => res.json());
+
+    if (!movie.status) {
+      throw new Error("not found");
+    }
 
     const data = new MovieResponse({
       name: movie.movie.name,
@@ -32,13 +40,13 @@ export async function GET(
       casts: movie.movie.actor
         .map((item: string) => item.trim())
         .filter((item: string) => item),
+      countries: movie.movie.country
+        .map((item: { name: string }) => item.name.trim())
+        .filter((item: string) => item),
       directors: movie.movie.director
         .map((item: string) => item.trim())
         .filter((item: string) => item),
       categories: movie.movie.category
-        .map((item: { name: string }) => item.name.trim())
-        .filter((item: string) => item),
-      countries: movie.movie.country
         .map((item: { name: string }) => item.name.trim())
         .filter((item: string) => item),
       isTheater: movie.movie.chieurap,

@@ -1,6 +1,9 @@
 import { apiCaller } from "@/core/api";
 import { ApiResponse } from "@/core/dto/api-result.dto";
-import { MovieResponse, MoviesEpisodeResponse } from "@/core/dto/movies/movies.dto";
+import {
+  MovieResponse,
+  MoviesEpisodeResponse,
+} from "@/core/dto/movies/movies.dto";
 
 const apiUrl = "https://ophim1.com/phim";
 
@@ -13,7 +16,7 @@ export async function GET(
     const movie = await apiCaller(apiReq).then((res) => res.json());
 
     if (!movie.status) {
-      throw new Error(movie.msg);
+      throw new Error("not found");
     }
 
     const data = new MovieResponse({
@@ -39,10 +42,10 @@ export async function GET(
       directors: movie.movie.director
         .map((item: string) => item.trim())
         .filter((item: string) => item),
-      categories: movie.movie.category
+      countries: movie.movie.country
         .map((item: { name: string }) => item.name.trim())
         .filter((item: string) => item),
-      countries: movie.movie.country
+      categories: movie.movie.category
         .map((item: { name: string }) => item.name.trim())
         .filter((item: string) => item),
       isTheater: movie.movie.chieurap,
